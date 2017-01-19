@@ -1,26 +1,72 @@
-var app = angular.module('flapperNews', []);
+var app = angular.module('flapperNews', ['ui.router']);
+
+app.config([
+'$stateProvider',
+'$urlRouterProvider',
+function($stateProvider, $urlRouterProvider) {
+
+  $stateProvider
+    .state('home', {
+      url: '/home',
+      templateUrl: '/home.html',
+      controller: 'MainCtrl'
+    })
+
+    .state('posts', {
+      url: '/posts/{id}',
+      templateUrl: '/posts.html',
+      controller: 'PostsCtrl'
+    });
+
+  $urlRouterProvider.otherwise('home');
+}]);
+
+app.factory('posts', [function(){
+  var o = {
+    posts: []
+  };
+  return o;
+}]);
 
 app.controller('MainCtrl', [
     '$scope',
-    function($scope){
-      $scope.posts = [
-        {title: 'post 1', upvotes: 5, link: 'http://www.google.com'},
-        {title: 'post 2', upvotes: 2, link: 'http://www.reddit.com'},
-        {title: 'post 3', upvotes: 15, link: 'http://www.medium.com'},
-        {title: 'post 4', upvotes: 9, link: 'http://www.guardian.com'},
-        {title: 'post 5', upvotes: 4, link: 'http://www.twitter.com'}
-      ];
-    $scope.addPost = function(){
-      if(!$scope.title || $scope.title === '') { return; }
-      $scope.posts.push({
-        title: $scope.title,
-        link: $scope.link,
-        upvotes: 0
-        });
-      $scope.title = '';
-      $scope.link = '';
-    };
-    $scope.incrementUpvotes = function(post){
-      post.upvotes++;
-    }
+    'posts',
+    function($scope, posts){
+      $scope.posts = posts.posts;
+      $scope.addPost = function(){
+        if(!$scope.title || $scope.title === '') { return; }
+        $scope.posts.push({
+          title: $scope.title,
+          link: $scope.link,
+          upvotes: 0,
+          comments: [
+            {author: 'Joe', body: 'Cool post!', upvotes: 0},
+            {author: 'Bob', body: 'Great idea but everything is wrong!', upvotes: 0}
+          ]
+          });
+        $scope.title = '';
+        $scope.link = '';
+        console.log(posts.posts)
+      };
+      $scope.incrementUpvotes = function(post){
+        post.upvotes++;
+      }
+}]);
+
+app.controller('PostsCtrl', [
+'$scope',
+'$stateParams',
+'posts',
+function($scope, $stateParams, posts){
+  $scope.post = posts.posts[$stateParams.id];
+  $scope.addComment = function(){
+  if($scope.body === '') { return; }
+  $scope.post.comments.push({
+    body: $scope.body,
+    author: 'user',
+    upvotes: 0
+  });
+  $scope.body = '';
+};
+
 }]);
